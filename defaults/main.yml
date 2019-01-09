@@ -51,4 +51,5 @@ yum_php_packages:
   - php{{ yum_php_version }}-mbstring
   - php{{ yum_php_version }}-pdo
   - php{{ yum_php_version }}-xml
+  - php{{ yum_php_version }}-ioncube-loader
   - mod_php72u

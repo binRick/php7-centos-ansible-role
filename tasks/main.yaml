@@ -1,0 +1,51 @@
+---
+- name: Install requires package with yum
+  become: true
+  yum:
+    name:
+    - libselinux-python
+    - epel-release
+
+- name: Install the remi and ius repo from remote repo
+  become: true
+  yum:
+    name:
+    - "http://rpms.remirepo.net/enterprise/remi-release-{{ ansible_distribution_major_version }}.rpm"
+    - "https://centos{{ ansible_distribution_major_version }}.iuscommunity.org/ius-release.rpm"
+
+- name: Handle Native PHP Packages
+  block:
+  - name: Checking if php 5 is installed
+    ignore_errors: yes
+    register: php5
+    shell: "rpm -qa | grep 'php-'"
+    args:
+      warn: no
+  - name: Remove Legacy PHP Packages
+    when: not php5 is failed
+    loop: [php*]
+    yum: name={{item}} state=absent
+
+- name: Install PHP 7 Packages
+  register: phpPackages
+  become: true
+  yum:
+    name: "{{ yum_php_packages }}"
+    enablerepo: ius
+  when: yum_php_packages is defined
+
+- name: Set the php.ini
+  register: phpIni
+  become: true
+  template:
+    src: templates/php.ini.centos.j2
+    dest: /etc/php.ini
+    owner: root
+    group: root
+    mode: 0644
+
+- name: HUP Apache
+  when: phpIni is changed or phpPackages is changed
+  ignore_errors: yes
+  command: killall -HUP httpd
+  become: yes

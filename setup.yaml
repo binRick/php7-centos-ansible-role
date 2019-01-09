@@ -1,0 +1,13 @@
+---
+- name: Setup php7
+  hosts: all
+  become: true
+
+  vars_files:
+    - defaults/main.yaml
+
+  tasks:
+    - name: Include main tasks
+      import_tasks: tasks/main.yaml
+
+  handlers: []
